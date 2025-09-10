@@ -7,7 +7,15 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS 설정 강화 - GPTs Actions 호환성
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // 간단한 메모리 캐시
@@ -169,7 +177,9 @@ app.get('/api/requests', async (req, res) => {
     
     // GPTs Actions 호환성을 위한 명시적 헤더 설정
     res.setHeader('Content-Type', 'application/json');
-    res.status(200).send(JSON.stringify({
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),
       total: enrichedData.length,
@@ -177,7 +187,7 @@ app.get('/api/requests', async (req, res) => {
       filters: { project, days, source },
       sources,
       responseTime: `${Date.now() - startTime}ms`
-    }));
+    });
     
   } catch (error: any) {
     res.status(500).json({
@@ -264,7 +274,13 @@ app.post('/api/update-data', express.json(), (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Simple cache API running on port ${PORT}`);
-});
+// Vercel Serverless Function Export
+export default app;
+
+// Local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Simple cache API running on port ${PORT}`);
+  });
+}
