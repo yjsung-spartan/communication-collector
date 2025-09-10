@@ -8,7 +8,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/redis-cached"
+      "destination": "/api/index-vercel"
     }
   ],
   "headers": [
