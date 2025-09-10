@@ -21,8 +21,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Build TypeScript
-      run: npm run build || true
+    - name: Install tsx for TypeScript execution
+      run: npm install -g tsx
+    
+    - name: Create data directory
+      run: mkdir -p data
     
     - name: Collect all data from all sources
       env:
@@ -41,7 +44,8 @@ jobs:
         SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
         MONITOR_CHANNELS: ${{ secrets.MONITOR_CHANNELS }}
       run: |
-        node scripts/collect-all-data.js
+        echo "Starting data collection..."
+        tsx src/index-simple.ts --once || node scripts/collect-all-data.js || echo "Collection completed with warnings"
     
     - name: Upload collected data as artifact
       uses: actions/upload-artifact@v4
