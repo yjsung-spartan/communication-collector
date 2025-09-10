@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index-fast.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["src/**", "api/**"],
+        "maxDuration": 10
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index-fast.ts"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Customer Request Analysis API",
+    "version": "1.0.0",
+    "description": "API for collecting and analyzing customer requests from Slack, Confluence, and Figma"
+  },
+  "servers": [
+    {
+      "url": "https://weplanet-slack-nqskp0x0j-yjsungs-projects.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/requests": {
+      "get": {
+        "operationId": "getAllRequests",
+        "summary": "Get all customer requests with enriched information",
+        "description": "Returns all collected requests with elapsed days, priority, and resolution status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string" },
+                    "total": { "type": "number" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "source": { "type": "string", "enum": ["slack", "confluence", "figma"] },
+                          "content": { "type": "string" },
+                          "author": { "type": "string" },
+                          "requestedAt": { "type": "string", "format": "date-time" },
+                          "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
+                          "category": { "type": "string" },
+                          "link": { "type": "string" },
+                          "channel": { "type": "string" },
+                          "daysElapsed": { "type": "number" },
+                          "isOld": { "type": "boolean" },
+                          "isCritical": { "type": "boolean" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/summary": {
+      "get": {
+        "operationId": "getSummary",
+        "summary": "Get statistical summary of requests",
+        "description": "Returns aggregated statistics by source, priority, and category",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string" },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "total": { "type": "number" },
+                        "bySource": { "type": "object" },
+                        "byPriority": { "type": "object" },
+                        "byCategory": { "type": "object" },
+                        "oldRequests": { "type": "number" },
+                        "criticalRequests": { "type": "number" },
+                        "averageDaysElapsed": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/llm": {
+      "get": {
+        "operationId": "getRequestsForLLM",
+        "summary": "Get requests formatted for LLM processing",
+        "description": "Returns resolved and unresolved requests separately, optimized for LLM analysis",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string" },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalRequests": { "type": "number" },
+                        "unresolvedCount": { "type": "number" },
+                        "resolvedCount": { "type": "number" },
+                        "criticalCount": { "type": "number" }
+                      }
+                    },
+                    "unresolved": {
+                      "type": "object",
+                      "properties": {
+                        "urgent": { "type": "array", "items": { "type": "object" } },
+                        "high": { "type": "array", "items": { "type": "object" } },
+                        "medium": { "type": "array", "items": { "type": "object" } },
+                        "low": { "type": "array", "items": { "type": "object" } }
+                      }
+                    },
+                    "resolved": {
+                      "type": "object",
+                      "properties": {
+                        "recent": { "type": "array", "items": { "type": "object" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collect": {
+      "post": {
+        "operationId": "triggerCollection",
+        "summary": "Manually trigger data collection",
+        "description": "Triggers collection from all configured sources",
+        "responses": {
+          "200": {
+            "description": "Collection triggered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "collected": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Communication Collector API",
+    "description": "Confluence, Figma 댓글 수집 및 분석 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://weplanet-slack-1g2jdsz4h-yjsungs-projects.vercel.app",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/api/requests": {
+      "get": {
+        "summary": "전체 요청사항 조회",
+        "description": "수집된 모든 고객 요청사항을 조회합니다",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "조회 기간 (일 단위)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 1,
+              "maximum": 365
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "데이터 소스 필터",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["confluence", "figma", "slack", "all"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "description": "우선순위 필터",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["urgent", "high", "medium", "low"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CustomerRequest"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/summary": {
+      "get": {
+        "summary": "요약 통계 조회",
+        "description": "수집된 데이터의 통계 요약을 제공합니다",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "통계 기간",
+            "schema": {
+              "type": "integer",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "bySource": {
+                          "type": "object"
+                        },
+                        "byPriority": {
+                          "type": "object"
+                        },
+                        "oldRequests": {
+                          "type": "integer"
+                        },
+                        "criticalRequests": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collect": {
+      "post": {
+        "summary": "데이터 수집 실행",
+        "description": "Confluence와 Figma에서 새로운 데이터를 수집합니다",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "integer",
+                    "description": "수집할 기간 (일)",
+                    "default": 30
+                  },
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["confluence", "figma", "all"]
+                    },
+                    "default": ["all"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "수집 완료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "collected": {
+                      "type": "integer",
+                      "description": "수집된 항목 수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/llm": {
+      "get": {
+        "summary": "LLM 최적화 형식으로 조회",
+        "description": "GPT가 분석하기 쉬운 형식으로 데이터를 제공합니다",
+        "parameters": [
+          {
+            "name": "unresolved_only",
+            "in": "query",
+            "description": "미해결 요청만 조회",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CustomerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "crNumber": {
+            "type": "string",
+            "description": "요청 번호"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["confluence", "figma", "slack"]
+          },
+          "requesterName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["urgent", "high", "medium", "low"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "daysElapsed": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

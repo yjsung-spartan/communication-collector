@@ -1,0 +1,44 @@
+{
+  "name": "communication-collector",
+  "version": "1.0.0",
+  "description": "Communication Collector API - 고객 요청 수집 및 커뮤니케이션 통합",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "api": "tsx src/api-server.ts",
+    "collect": "tsx src/index-simple.ts --once",
+    "collect:watch": "tsx src/index-simple.ts",
+    "test:export": "tsx src/test-export.ts",
+    "test:confluence": "tsx src/test-confluence.ts",
+    "build": "tsc || true",
+    "start:prod": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "@slack/web-api": "^7.10.0",
+    "@types/axios": "^0.9.36",
+    "@types/node": "^24.3.1",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "openai": "^5.19.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.15.5",
+    "node-cron": "^4.2.1",
+    "pg": "^8.16.3"
+  }
+}
