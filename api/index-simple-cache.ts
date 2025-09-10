@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import { openAPISchema } from './openapi-schema';
 
 dotenv.config();
 
@@ -249,6 +250,11 @@ app.get('/api/requests/llm', async (req, res) => {
       }))
     }
   });
+});
+
+// OpenAPI Schema endpoint (GPTs Actions 용)
+app.get('/openapi.json', (req, res) => {
+  res.json(openAPISchema);
 });
 
 // 데이터 업데이트 endpoint (수동 업데이트용)
