@@ -12,19 +12,38 @@ export default async function handler(req: any, res: any) {
     return res.status(200).end();
   }
   
-  // Mock 데이터
+  // Mock 데이터 - 날짜를 어제로 설정
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  
   const mockData = [
     {
       id: 'CONF-001',
       crNumber: 'CR-20250110-001',
       source: 'confluence',
-      requesterName: 'Test User',
-      title: 'Test Request',
-      description: 'This is a test request',
+      requesterName: '김개발',
+      title: '로그인 화면 개선 요청',
+      description: '소셜 로그인 버튼이 너무 작아서 터치가 어렵습니다.',
       category: 'UI/UX',
       priority: 'high',
       channelName: 'Fanlight',
-      requestedAt: new Date().toISOString()
+      requestedAt: yesterday.toISOString(),
+      daysElapsed: 1,
+      status: 'open'
+    },
+    {
+      id: 'FIGMA-001',
+      crNumber: 'CR-20250110-002',
+      source: 'figma',
+      requesterName: '박디자인',
+      title: '결제 화면 플로우 검토',
+      description: '쿠폰 적용 버튼 위치가 직관적이지 않습니다.',
+      category: 'UI/UX',
+      priority: 'medium',
+      channelName: 'Fanlight',
+      requestedAt: yesterday.toISOString(),
+      daysElapsed: 1,
+      status: 'open'
     }
   ];
   
