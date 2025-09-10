@@ -15,6 +15,13 @@ let cachedData: any = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1시간 캐시
 
+// 동적으로 최근 날짜 생성
+const today = new Date();
+const yesterday = new Date(today);
+yesterday.setDate(yesterday.getDate() - 1);
+const twoDaysAgo = new Date(today);
+twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
 // 미리 정의된 데이터 (수동 업데이트용)
 const STATIC_DATA = {
   fanlight: [
@@ -30,7 +37,7 @@ const STATIC_DATA = {
       priority: 'high',
       channelName: 'Fanlight',
       originalUrl: 'https://fanlight-weplanet.atlassian.net/wiki/spaces/FL/pages/12345',
-      requestedAt: new Date('2025-09-09').toISOString()
+      requestedAt: yesterday.toISOString()
     },
     {
       id: 'FIGMA-001',
@@ -44,7 +51,7 @@ const STATIC_DATA = {
       priority: 'medium',
       channelName: 'Fanlight',
       originalUrl: 'https://www.figma.com/file/abc123/Fanlight-Design',
-      requestedAt: new Date('2025-09-08').toISOString()
+      requestedAt: twoDaysAgo.toISOString()
     }
   ],
   momgleedu: [
@@ -60,7 +67,7 @@ const STATIC_DATA = {
       priority: 'high',
       channelName: 'Momgleedu',
       originalUrl: 'https://momgle-edu.atlassian.net/wiki/spaces/ME/pages/67890',
-      requestedAt: new Date('2025-09-10').toISOString()
+      requestedAt: today.toISOString()
     }
   ]
 };
