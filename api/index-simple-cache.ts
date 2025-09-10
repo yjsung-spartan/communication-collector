@@ -167,7 +167,9 @@ app.get('/api/requests', async (req, res) => {
       confluence: enrichedData.filter((r: any) => r.source === 'confluence').length
     };
     
-    res.json({
+    // GPTs Actions 호환성을 위한 명시적 헤더 설정
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send(JSON.stringify({
       success: true,
       timestamp: new Date().toISOString(),
       total: enrichedData.length,
@@ -175,7 +177,7 @@ app.get('/api/requests', async (req, res) => {
       filters: { project, days, source },
       sources,
       responseTime: `${Date.now() - startTime}ms`
-    });
+    }));
     
   } catch (error: any) {
     res.status(500).json({
