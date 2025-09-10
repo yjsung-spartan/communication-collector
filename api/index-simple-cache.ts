@@ -30,7 +30,7 @@ const STATIC_DATA = {
       priority: 'high',
       channelName: 'Fanlight',
       originalUrl: 'https://fanlight-weplanet.atlassian.net/wiki/spaces/FL/pages/12345',
-      requestedAt: new Date('2025-01-09').toISOString()
+      requestedAt: new Date('2025-09-09').toISOString()
     },
     {
       id: 'FIGMA-001',
@@ -44,7 +44,7 @@ const STATIC_DATA = {
       priority: 'medium',
       channelName: 'Fanlight',
       originalUrl: 'https://www.figma.com/file/abc123/Fanlight-Design',
-      requestedAt: new Date('2025-01-08').toISOString()
+      requestedAt: new Date('2025-09-08').toISOString()
     }
   ],
   momgleedu: [
@@ -60,7 +60,7 @@ const STATIC_DATA = {
       priority: 'high',
       channelName: 'Momgleedu',
       originalUrl: 'https://momgle-edu.atlassian.net/wiki/spaces/ME/pages/67890',
-      requestedAt: new Date('2025-01-10').toISOString()
+      requestedAt: new Date('2025-09-10').toISOString()
     }
   ]
 };
