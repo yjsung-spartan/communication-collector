@@ -1,8 +1,8 @@
 {
   "version": 2,
   "functions": {
-    "api/redis-cached.ts": {
-      "maxDuration": 10
+    "api/*.ts": {
+      "maxDuration": 800
     }
   },
   "rewrites": [
