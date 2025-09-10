@@ -73,15 +73,19 @@ async function collectAllData() {
     }
 
     // 2. Confluence Collection  
-    if (process.env.CONFLUENCE_BASE_URL && process.env.CONFLUENCE_API_TOKEN) {
+    if (process.env.CONFLUENCE_DOMAINS && process.env.CONFLUENCE_API_TOKEN) {
       console.log('📄 Collecting from Confluence...');
       try {
         const confluenceCollector = new ConfluencePageCollectorService(dbService);
-        const spaces = (process.env.CONFLUENCE_SPACES || '').split(',').filter(s => s);
+        const domains = (process.env.CONFLUENCE_DOMAINS || '').split(',').filter(d => d);
         
-        for (const space of spaces) {
-          console.log(`  - Space: ${space}`);
-          await confluenceCollector.collectSpaceComments(space);
+        for (const domain of domains) {
+          console.log(`  - Domain: ${domain}`);
+          // Set domain-specific URL
+          process.env.CONFLUENCE_BASE_URL = `https://${domain}`;
+          
+          // Collect from all spaces in this domain
+          await confluenceCollector.collectPagesAndComments([]);
         }
         
         const confluenceRequests = await dbService.getRequestsBySource('confluence');
