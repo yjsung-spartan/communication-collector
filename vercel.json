@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index-fast.ts",
+      "src": "api/index-simple-cache.ts",
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["src/**", "api/**"],
@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index-fast.ts"
+      "dest": "/api/index-simple-cache.ts"
     }
   ],
   "env": {
