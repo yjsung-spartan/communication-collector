@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "api/index-simple-cache.ts": {
+    "api/index-vercel.ts": {
       "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/index-simple-cache"
+      "destination": "/api/index-vercel"
     }
   ],
   "headers": [

@@ -7,12 +7,40 @@
   },
   "servers": [
     {
-      "url": "https://weplanet-slack-5qjhowyjo-yjsungs-projects.vercel.app"
+      "url": "https://communication-collector.vercel.app"
     }
   ],
   "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Health check",
+        "description": "Simple health check endpoint",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/requests": {
       "get": {
+        "operationId": "getRequests",
         "summary": "Get customer requests",
         "description": "Retrieves all customer requests with filtering options",
         "parameters": [
@@ -80,6 +108,7 @@
     },
     "/api/summary": {
       "get": {
+        "operationId": "getSummary",
         "summary": "Get summary statistics",
         "description": "Returns aggregated statistics",
         "responses": {
@@ -88,7 +117,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number"
+                        },
+                        "bySource": {
+                          "type": "object"
+                        },
+                        "byPriority": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -98,6 +149,7 @@
     },
     "/api/requests/llm": {
       "get": {
+        "operationId": "getRequestsForLLM",
         "summary": "Get LLM-formatted requests",
         "description": "Returns requests optimized for LLM",
         "parameters": [
@@ -116,7 +168,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number"
+                        },
+                        "requests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
