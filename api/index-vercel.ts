@@ -12,40 +12,45 @@ export default async function handler(req: any, res: any) {
     return res.status(200).end();
   }
   
-  // Mock 데이터 - 날짜를 어제로 설정
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  const mockData = [
-    {
-      id: 'CONF-001',
-      crNumber: 'CR-20250110-001',
+  // 실제같은 데이터 생성 - 프로젝트별로 더 많은 데이터
+  const now = new Date();
+  const generateRequests = (project: string) => {
+    const baseData = {
+      fanlight: [
+        { requesterName: 'heather', title: '로그인 화면 개선 요청', description: '소셜 로그인 버튼이 너무 작아서 터치가 어렵습니다.' },
+        { requesterName: '김PM', title: '결제 프로세스 오류', description: '쿠폰 적용시 할인이 반영되지 않습니다.' },
+        { requesterName: 'Lucy', title: 'UI 색상 변경 요청', description: '다크모드에서 텍스트 가독성이 떨어집니다.' },
+        { requesterName: 'client_01', title: '알림 기능 개선', description: '푸시 알림이 늦게 도착합니다.' },
+        { requesterName: 'heather', title: '검색 필터 추가', description: '날짜별 필터링 기능이 필요합니다.' }
+      ],
+      momgleedu: [
+        { requesterName: '최지선', title: '비디오 재생 오류', description: '특정 영상이 재생되지 않습니다.' },
+        { requesterName: 'PM_Lee', title: '회원가입 프로세스', description: '이메일 인증이 작동하지 않습니다.' },
+        { requesterName: 'client_02', title: '콘텐츠 정렬 문제', description: '최신순 정렬이 제대로 안됩니다.' },
+        { requesterName: '박고객', title: '결제 오류 신고', description: '카드 결제가 진행되지 않습니다.' },
+        { requesterName: 'Lucy', title: '관리자 페이지 접근', description: '권한이 있는데도 접근이 안됩니다.' }
+      ]
+    };
+    
+    const projectData = project === 'momgleedu' ? baseData.momgleedu : baseData.fanlight;
+    return projectData.map((item, index) => ({
+      id: `${project.toUpperCase()}-${index + 1}`,
+      crNumber: `CR-${now.toISOString().split('T')[0].replace(/-/g, '')}-${project.substring(0, 3).toUpperCase()}${index + 1}`,
       source: 'confluence',
-      requesterName: '김개발',
-      title: '로그인 화면 개선 요청',
-      description: '소셜 로그인 버튼이 너무 작아서 터치가 어렵습니다.',
-      category: 'UI/UX',
-      priority: 'high',
-      channelName: 'Fanlight',
-      requestedAt: yesterday.toISOString(),
-      daysElapsed: 1,
-      status: 'open'
-    },
-    {
-      id: 'FIGMA-001',
-      crNumber: 'CR-20250110-002',
-      source: 'figma',
-      requesterName: '박디자인',
-      title: '결제 화면 플로우 검토',
-      description: '쿠폰 적용 버튼 위치가 직관적이지 않습니다.',
-      category: 'UI/UX',
-      priority: 'medium',
-      channelName: 'Fanlight',
-      requestedAt: yesterday.toISOString(),
-      daysElapsed: 1,
-      status: 'open'
-    }
-  ];
+      requesterName: item.requesterName,
+      title: item.title,
+      description: item.description,
+      category: 'feature_request',
+      priority: index === 0 ? 'high' : index < 3 ? 'medium' : 'low',
+      channelName: project === 'momgleedu' ? 'Momgleedu' : 'Fanlight',
+      requestedAt: new Date(now.getTime() - (index * 86400000)).toISOString(),
+      daysElapsed: index,
+      status: 'open',
+      originalUrl: `https://${project === 'momgleedu' ? 'momgle-edu' : 'fanlight-weplanet'}.atlassian.net/wiki/spaces/DOCS/pages/${1000 + index}`
+    }));
+  };
+  
+  const mockData = [...generateRequests('fanlight'), ...generateRequests('momgleedu')];
   
   // 라우팅
   if (pathname === '/health') {
@@ -55,16 +60,49 @@ export default async function handler(req: any, res: any) {
     });
   }
   
-  if (pathname === '/api/requests') {
+  if (pathname === '/api/requests' || pathname === '/requests') {
+    // 파라미터 파싱
+    const project = searchParams.get('project') || 'all';
+    const days = parseInt(searchParams.get('days') || '30');
+    
+    // 프로젝트 필터링
+    let filteredData = mockData;
+    if (project !== 'all') {
+      filteredData = mockData.filter(req => {
+        if (project === 'fanlight') {
+          return req.originalUrl.includes('fanlight-weplanet');
+        } else if (project === 'momgleedu' || project === 'momgle-edu') {
+          return req.originalUrl.includes('momgle-edu');
+        }
+        return false;
+      });
+    }
+    
+    // 날짜 필터링
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    filteredData = filteredData.filter(req => 
+      new Date(req.requestedAt) >= cutoffDate
+    );
+    
     return res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),
-      total: mockData.length,
-      data: mockData
+      total: filteredData.length,
+      data: {
+        total: filteredData.length,
+        requests: filteredData
+      },
+      filters: { project, days },
+      sources: {
+        confluence: filteredData.filter(r => r.source === 'confluence').length,
+        figma: 0,
+        slack: 0
+      }
     });
   }
   
-  if (pathname === '/api/summary') {
+  if (pathname === '/api/summary' || pathname === '/summary') {
     return res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),

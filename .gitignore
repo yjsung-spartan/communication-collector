@@ -56,3 +56,4 @@ exports/
 # Documentation builds
 docs/_build/
 .vercel
+.env*.local

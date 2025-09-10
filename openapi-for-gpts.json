@@ -95,7 +95,21 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "object"
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "crNumber": { "type": "string" },
+                          "source": { "type": "string" },
+                          "requesterName": { "type": "string" },
+                          "title": { "type": "string" },
+                          "description": { "type": "string" },
+                          "category": { "type": "string" },
+                          "priority": { "type": "string" },
+                          "channelName": { "type": "string" },
+                          "requestedAt": { "type": "string" },
+                          "daysElapsed": { "type": "integer" },
+                          "status": { "type": "string" }
+                        }
                       }
                     }
                   }

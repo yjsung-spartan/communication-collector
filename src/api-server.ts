@@ -88,26 +88,55 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Get latest collected requests
+// Get latest collected requests (from stored JSON)
 app.get('/api/requests', async (req, res) => {
   try {
-    const requests = await collectRequests();
+    // Try to read from stored JSON first
+    const fs = require('fs');
+    const path = require('path');
+    const dataPath = path.join(__dirname, '..', 'data', 'latest.json');
     
-    // Add elapsed days to each request
-    const enrichedRequests = requests.map(req => ({
-      ...req,
-      daysElapsed: calculateDaysElapsed(req.requestedAt),
-      isOld: calculateDaysElapsed(req.requestedAt) > 7,
-      isCritical: calculateDaysElapsed(req.requestedAt) > 3 && 
-                  (req.priority === 'urgent' || req.priority === 'high')
-    }));
-    
-    res.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      total: enrichedRequests.length,
-      data: enrichedRequests
-    });
+    if (fs.existsSync(dataPath)) {
+      const storedData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+      const requests = storedData.requests || [];
+      
+      // Add elapsed days to each request
+      const enrichedRequests = requests.map((req: any) => ({
+        ...req,
+        daysElapsed: calculateDaysElapsed(new Date(req.requestedAt)),
+        isOld: calculateDaysElapsed(new Date(req.requestedAt)) > 7,
+        isCritical: calculateDaysElapsed(new Date(req.requestedAt)) > 3 && 
+                    (req.priority === 'urgent' || req.priority === 'high')
+      }));
+      
+      res.json({
+        success: true,
+        timestamp: storedData.metadata?.timestamp || new Date().toISOString(),
+        total: enrichedRequests.length,
+        dataSource: 'cached',
+        data: enrichedRequests
+      });
+    } else {
+      // Fallback to real-time collection if no cached data
+      const requests = await collectRequests();
+      
+      // Add elapsed days to each request
+      const enrichedRequests = requests.map(req => ({
+        ...req,
+        daysElapsed: calculateDaysElapsed(req.requestedAt),
+        isOld: calculateDaysElapsed(req.requestedAt) > 7,
+        isCritical: calculateDaysElapsed(req.requestedAt) > 3 && 
+                    (req.priority === 'urgent' || req.priority === 'high')
+      }));
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        total: enrichedRequests.length,
+        dataSource: 'real-time',
+        data: enrichedRequests
+      });
+    }
   } catch (error: any) {
     res.status(500).json({
       success: false,

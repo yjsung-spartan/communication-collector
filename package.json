@@ -12,6 +12,7 @@
     "test:export": "tsx src/test-export.ts",
     "test:confluence": "tsx src/test-confluence.ts",
     "build": "tsc || true",
+    "vercel-build": "mkdir -p public && node scripts/build-db.js",
     "start:prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -24,12 +25,15 @@
     "@slack/web-api": "^7.10.0",
     "@types/axios": "^0.9.36",
     "@types/node": "^24.3.1",
+    "@vercel/kv": "^3.0.0",
     "axios": "^1.11.0",
+    "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
     "openai": "^5.19.1",
+    "redis": "^5.8.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   },

@@ -1,0 +1,62 @@
+name: Collect All Communication Data
+
+on:
+  schedule:
+    # 매일 한국시간 오전 6시, 12시, 오후 6시, 자정
+    - cron: '0 21,3,9,15 * * *'  # UTC 기준
+  workflow_dispatch: # 수동 실행
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build TypeScript
+      run: npm run build || true
+    
+    - name: Collect all data from all sources
+      env:
+        # Slack
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+        SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+        MONITOR_CHANNELS: ${{ secrets.MONITOR_CHANNELS }}
+        
+        # Confluence
+        CONFLUENCE_BASE_URL: ${{ secrets.CONFLUENCE_BASE_URL }}
+        CONFLUENCE_EMAIL: ${{ secrets.CONFLUENCE_EMAIL }}
+        CONFLUENCE_API_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
+        CONFLUENCE_SPACES: ${{ secrets.CONFLUENCE_SPACES }}
+        
+        # Figma
+        FIGMA_ACCESS_TOKEN: ${{ secrets.FIGMA_ACCESS_TOKEN }}
+        FIGMA_FILE_KEYS: ${{ secrets.FIGMA_FILE_KEYS }}
+      run: |
+        node scripts/collect-all-data.js
+    
+    - name: Upload collected data as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: collected-data
+        path: |
+          ./data/collected-*.json
+          ./data/latest.json
+        retention-days: 30
+    
+    - name: Commit and push data to repository
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add ./data/
+        git diff --staged --quiet || git commit -m "Update collected data [skip ci]"
+        git push || echo "No changes to push"

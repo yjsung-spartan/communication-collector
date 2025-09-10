@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "api/index-vercel.ts": {
+    "api/redis-cached.ts": {
       "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/index-vercel"
+      "destination": "/api/redis-cached"
     }
   ],
   "headers": [

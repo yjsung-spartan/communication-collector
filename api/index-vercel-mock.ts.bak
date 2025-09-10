@@ -1,0 +1,404 @@
+// Vercel Serverless Function - Communication Collector API
+// 완전히 재작성된 버전 with 로깅, 에러 처리, 표준화된 응답
+
+interface ApiResponse {
+  success: boolean;
+  timestamp: string;
+  data?: any;
+  error?: string;
+  debug?: {
+    source: string;
+    requestId: string;
+    apiVersion: string;
+    headers?: any;
+  };
+}
+
+export default async function handler(req: any, res: any) {
+  const startTime = Date.now();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  try {
+    // URL 파싱
+    const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`);
+    
+    // 상세 로깅 (디버깅용)
+    console.log(`
+╔════════════════════════════════════════╗
+║         API REQUEST LOG                ║
+╠════════════════════════════════════════╣
+║ Request ID: ${requestId}
+║ Time: ${new Date().toISOString()}
+║ Method: ${req.method}
+║ Path: ${pathname}
+║ Query: ${searchParams.toString() || 'none'}
+║ User-Agent: ${req.headers['user-agent'] || 'unknown'}
+║ Origin: ${req.headers.origin || 'no-origin'}
+║ Referer: ${req.headers.referer || 'no-referer'}
+║ X-Forwarded-For: ${req.headers['x-forwarded-for'] || 'no-ip'}
+╚════════════════════════════════════════╝
+    `);
+    
+    // CORS 헤더 설정 (모든 응답에 포함)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('X-API-Version', 'v2.0-mock');
+    res.setHeader('X-Request-ID', requestId);
+    
+    // OPTIONS 요청 처리 (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      console.log('OPTIONS request - returning 204');
+      return res.status(204).end();
+    }
+    
+    // Mock 데이터
+    const mockRequests = [
+      {
+        id: 'MOCK-001',
+        crNumber: 'CR-20250110-001',
+        source: 'confluence',
+        requesterName: '김테스트',
+        title: '[Mock] 로그인 개선 요청',
+        description: 'Mock 데이터입니다 - 실제 API 호출 확인용',
+        category: 'UI/UX',
+        priority: 'high',
+        channelName: 'TestChannel',
+        requestedAt: new Date(Date.now() - 86400000).toISOString(),
+        daysElapsed: 1,
+        status: 'open'
+      },
+      {
+        id: 'MOCK-002',
+        crNumber: 'CR-20250110-002',
+        source: 'figma',
+        requesterName: '이디자인',
+        title: '[Mock] 버튼 색상 변경',
+        description: 'Mock 데이터입니다 - API 연결 테스트',
+        category: 'Design',
+        priority: 'medium',
+        channelName: 'TestChannel',
+        requestedAt: new Date(Date.now() - 172800000).toISOString(),
+        daysElapsed: 2,
+        status: 'in_progress'
+      }
+    ];
+    
+    // 라우팅
+    switch (pathname) {
+      case '/ping':
+        console.log(`✅ PING endpoint called - ${requestId}`);
+        return res.status(200).json({
+          success: true,
+          timestamp: new Date().toISOString(),
+          data: {
+            message: 'pong',
+            alive: true
+          },
+          debug: {
+            source: 'vercel-serverless',
+            requestId,
+            apiVersion: 'v2.0-mock',
+            responseTime: `${Date.now() - startTime}ms`
+          }
+        });
+        
+      case '/health':
+        console.log(`✅ HEALTH endpoint called - ${requestId}`);
+        return res.status(200).json({
+          success: true,
+          timestamp: new Date().toISOString(),
+          data: {
+            status: 'healthy',
+            uptime: process.uptime(),
+            environment: 'production'
+          },
+          debug: {
+            source: 'vercel-serverless',
+            requestId,
+            apiVersion: 'v2.0-mock'
+          }
+        });
+        
+      case '/requests':  // GPT가 기대하는 경로
+      case '/api/requests':  // 기존 경로도 유지
+        console.log(`✅ REQUESTS endpoint called - ${requestId}`);
+        return res.status(200).json({
+          success: true,
+          timestamp: new Date().toISOString(),
+          data: {
+            total: mockRequests.length,
+            requests: mockRequests
+          },
+          debug: {
+            source: 'vercel-serverless',
+            requestId,
+            apiVersion: 'v2.0-mock',
+            note: 'This is MOCK data for testing GPT Actions'
+          }
+        });
+        
+      case '/summary':  // GPT가 기대하는 경로
+      case '/api/summary':  // 기존 경로도 유지
+        console.log(`✅ SUMMARY endpoint called - ${requestId}`);
+        return res.status(200).json({
+          success: true,
+          timestamp: new Date().toISOString(),
+          data: {
+            stats: {
+              total: mockRequests.length,
+              bySource: { confluence: 1, figma: 1 },
+              byPriority: { high: 1, medium: 1 },
+              byStatus: { open: 1, in_progress: 1 }
+            }
+          },
+          debug: {
+            source: 'vercel-serverless',
+            requestId,
+            apiVersion: 'v2.0-mock'
+          }
+        });
+        
+      case '/openapi.json':
+        console.log(`✅ OPENAPI endpoint called - ${requestId}`);
+        return res.status(200).json(getOpenAPISchema());
+        
+      default:
+        console.log(`❌ 404 Not Found: ${pathname} - ${requestId}`);
+        return res.status(404).json({
+          success: false,
+          timestamp: new Date().toISOString(),
+          error: `Endpoint not found: ${pathname}`,
+          debug: {
+            source: 'vercel-serverless',
+            requestId,
+            apiVersion: 'v2.0-mock',
+            availableEndpoints: ['/ping', '/health', '/requests', '/summary', '/openapi.json']
+          }
+        });
+    }
+  } catch (error: any) {
+    console.error(`❌ ERROR - ${requestId}:`, error);
+    return res.status(500).json({
+      success: false,
+      timestamp: new Date().toISOString(),
+      error: error.message || 'Internal server error',
+      debug: {
+        source: 'vercel-serverless',
+        requestId,
+        apiVersion: 'v2.0-mock',
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
+    });
+  }
+}
+
+function getOpenAPISchema() {
+  return {
+    openapi: '3.1.0',
+    info: {
+      title: 'Communication Collector API',
+      version: '2.0.0',
+      description: 'API for collecting and managing customer communication requests',
+      contact: {
+        name: 'API Support',
+        email: 'support@example.com'
+      }
+    },
+    servers: [
+      {
+        url: 'https://communication-collector.vercel.app',
+        description: 'Production server'
+      }
+    ],
+    // GPT Action 호환성을 위한 추가 설정
+    security: [],  // 명시적으로 보안 없음 선언
+    externalDocs: {
+      description: 'API Documentation',
+      url: 'https://communication-collector.vercel.app'
+    },
+    paths: {
+      '/ping': {
+        get: {
+          summary: 'Ping endpoint',
+          operationId: 'ping',
+          description: 'Check if the API is reachable',
+          tags: ['Health'],
+          responses: {
+            '200': {
+              description: 'Successful ping',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          message: { type: 'string', example: 'pong' },
+                          alive: { type: 'boolean', example: true }
+                        }
+                      },
+                      debug: {
+                        type: 'object',
+                        properties: {
+                          source: { type: 'string' },
+                          requestId: { type: 'string' },
+                          apiVersion: { type: 'string' },
+                          responseTime: { type: 'string' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/health': {
+        get: {
+          summary: 'Health check',
+          operationId: 'healthCheck',
+          description: 'Get the health status of the API',
+          tags: ['Health'],
+          responses: {
+            '200': {
+              description: 'API is healthy',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          status: { type: 'string' },
+                          uptime: { type: 'number' },
+                          environment: { type: 'string' }
+                        }
+                      },
+                      debug: { type: 'object' }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/requests': {
+        get: {
+          summary: 'Get all customer requests',
+          operationId: 'getRequests',
+          description: 'Retrieve all customer communication requests',
+          tags: ['Requests'],
+          responses: {
+            '200': {
+              description: 'List of customer requests',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          total: { type: 'integer' },
+                          requests: {
+                            type: 'array',
+                            items: {
+                              type: 'object',
+                              properties: {
+                                id: { type: 'string' },
+                                crNumber: { type: 'string' },
+                                source: { type: 'string', enum: ['confluence', 'figma', 'slack'] },
+                                requesterName: { type: 'string' },
+                                title: { type: 'string' },
+                                description: { type: 'string' },
+                                category: { type: 'string' },
+                                priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+                                channelName: { type: 'string' },
+                                requestedAt: { type: 'string', format: 'date-time' },
+                                daysElapsed: { type: 'integer' },
+                                status: { type: 'string', enum: ['open', 'in_progress', 'resolved', 'closed'] }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      debug: { type: 'object' }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/summary': {
+        get: {
+          summary: 'Get summary statistics',
+          operationId: 'getSummary',
+          description: 'Get aggregated statistics about customer requests',
+          tags: ['Statistics'],
+          responses: {
+            '200': {
+              description: 'Summary statistics',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          stats: {
+                            type: 'object',
+                            properties: {
+                              total: { type: 'integer' },
+                              bySource: { type: 'object' },
+                              byPriority: { type: 'object' },
+                              byStatus: { type: 'object' }
+                            }
+                          }
+                        }
+                      },
+                      debug: { type: 'object' }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    components: {
+      schemas: {
+        Error: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            timestamp: { type: 'string', format: 'date-time' },
+            error: { type: 'string' },
+            debug: { type: 'object' }
+          }
+        }
+      }
+    },
+    tags: [
+      { name: 'Health', description: 'Health and status endpoints' },
+      { name: 'Requests', description: 'Customer request management' },
+      { name: 'Statistics', description: 'Analytics and statistics' }
+    ]
+  };
+}
